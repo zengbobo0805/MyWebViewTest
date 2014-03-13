@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="custom_rules" >
+
+    <!-- 下载个ant-contrib-1.0b3.jar放ant的/lib包下 -->
+    <!-- 声明ant loop ，这里直接用ant的循环功能，批处理什么的又要多写代码，而且我也不熟 -->
+
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" >
+
+        <classpath>
+
+            <pathelement location="lib/antcontrib.jar" />
+        </classpath>
+    </taskdef>
+    <!-- 这里相当于一个方法把，(表示ant不会，只能看懂＝ ＝) ，以后可以用命令行 ant deploy 来表示批量打包 -->
+    <!-- ${market_channels} 要在local.properties里声明，并用,来分隔你要打包的channel名 -->
+    <!-- 比如我的local.properties里是这样写的   market_channels=Google,Gfan,AnZhi,MuMayi -->
+
+    <target name="deploy" >
+
+        <foreach
+            delimiter=","
+            list="${market_channels}"
+            param="channel"
+            target="modify_manifest" >
+        </foreach>
+    </target>
+    <!-- zengbobo 注意与AndroidManifest.xml空格也要匹配 -->
+    <!-- 修改manifest.xml里的渠道名，如果你要改其他文件，举一反三把 -->
+    <!-- regexp pattern是正则匹配，这里双引号要用&quot;而不是\ -->
+    <!-- substitution expression 是你要替换的的channel名 -->
+    <!-- 打包完毕后要把apk移动到一个指定的目录把，你可以在sdk/tools/ant/build.xml搜下out.final.file这个property在哪用到的 -->
+    <!-- <property name="out.final.file" location="${apk.dir}/XXX_{channel}.apk" />  ${apk.dir}表示你要指定的apk目录 XXX表示你要定义apk名和${channel}渠道号 -->
+    <!-- <antcall target="clean" /> <antcall target="release" /> release之前要调下clean，不然以后改的channel名不生效，你懂得 -->
+
+    <target name="modify_manifest" >
+
+        <replaceregexp
+            byline="false"
+            encoding="UTF-8"
+            flags="g" >
+
+            <regexp pattern="android:name=&quot;UMENG_CHANNEL&quot; android:value=&quot;(.*)&quot;" />
+
+            <substitution expression="android:name=&quot;UMENG_CHANNEL&quot; android:value=&quot;${channel}&quot;" />
+
+            <fileset
+                dir=""
+                includes="AndroidManifest.xml" />
+        </replaceregexp>
+
+        <property
+            name="out.final.file"
+            location="./succes_apk/MyWebViewTest_${channel}.apk" />
+
+        <antcall target="clean" />
+
+        <antcall target="release" />
+    </target>
+
+    <target name="-pre-compile" >
+        <echo message="JARPATH=${toString:project.all.jars.path}" >
+        </echo>
+
+        <property
+            name="gson.dir"
+            value="${jar.libs.dir}" >
+        </property>
+
+        <path id="gson.lib" >
+
+            <path path="${toString:project.all.jars.path}" >
+            </path>
+
+            <pathelement location="${gson.dir}/gson-2.2.4.jar" >
+            </pathelement>
+          
+        </path>
+
+        <path id="project.all.jars.path" >
+
+            <path refid="gson.lib" >
+            </path>
+        </path>
+
+        <echo message="JARPATH=${toString:project.all.jars.path}" >
+        </echo>
+    </target>
+
+</project>
